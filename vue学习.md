@@ -164,3 +164,34 @@ actions对象内 的一个函数属性的key若是和dispatch的
 **actions的作用在于 在修改数据之前 做一些处理 比如需要判断 最重要的是 向后台发请求**
 **若我们不需要做一些判断 也不需要对这个数据发请求 那么可以直接通过 Mutations进行修改**
 
+actions > mutations > state 这三个都是对象 它们都得被store管理
+
+## 搭建vuex环境
+
+1~npm i vuex 安装
+2~Vue.use(Vuex)
+3~store
+4~需要让所有组件都能使用
+
+**注意**: vue默认版本为3 那么安装vuex 默认版本就为4 vuex4 只能在vue3中使用	
+		vue2中 需要使用vuex3版本
+
+**当我们安装vuex 并且 引入后 还需要 Vue.use 这个vuex**
+然后我们就能在vm的配置对象上写一个store对象
+
+**store配置**:
+
+在src下新建一个vuex 写一个 store.js
+**官方建议:在src下新建一个store文件夹 / index.js**
+
+#### 问题!!:
+
+import 会有位置提升的问题 它优先级高于其他代码 所有import语句会按编写顺序执行 但是它的顺序高于非import语句
+比如 
+
+```js
+vue.use(vuex)
+import vuex from "vuex"  //这一句先执行
+```
+
+绑定好之后 我们就可以用
