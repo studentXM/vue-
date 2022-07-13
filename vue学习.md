@@ -55,9 +55,11 @@ template 使用slot-scope='scope' 标签内写入checkbox 双向绑定scope.row.
 
 props 也可以通过传递函数 来实现 子组件传递数据给父组件
 
-**$emit** 组件上声明一个事件名称 v-on:事件名(@事件名) 在子组件中 通过this.$emit('事件名',传递值) 这种方式也可以实现子传父
+**$emit** 方式
+组件上声明一个事件名称 v-on:事件名(@事件名) 在子组件中 通过this.$emit('事件名',传递值) 这种方式也可以实现子传父
 
-**ref** 组件上声明ref 然后 通过this.$refs.名称.$on('事件名',回调函数)绑定事件名
+**ref** 方式
+组件上声明ref 然后 通过this.$refs.名称.$on('事件名',回调函数)绑定事件名
 **v-on和$refs.名称.$on都可以绑定事件 这两种方式都是通过子组件emit发射(个人理解是调用)**
 
 **解绑自定义事件**
@@ -86,6 +88,7 @@ beforeCreate(){
 ## $nextTick-90
 
 this.$nextTick(function) 回调会在下一次dom节点更新完毕之后执行 
+**这也是一个特殊的生命周期函数**
 
 ## 动画效果
 
@@ -244,17 +247,18 @@ export default store
 
 ### getters  也是Vuex.Store的配置项
 
-getters里面写入函数 函数内部可以拿到 state中的值 这个函数可以对state的数据加工 可以return出去
+getters里面写入函数 函数内部可以拿到 state中的值 这个函数可以对state的数据加工(相当于computed) 可以return出去
 
 ### vuex开发者工具的使用-**110**
 
-#### mapState 和 mapGetters 在computed里生成函数
+#### mapState 和 mapGetters 在computed里生成函数 
 
 之所以使用展开运算符是因为 它是一个对象  里面包含了函数
 
 mapState映射state的数据 mapGetters映射getters的数据
 
-当我们的vue中 写了很多 重复的 this.$store.state时 我们可以使用mapState来进行使用
+**当我们的vue中 写了很多 重复的 this.$store.state时 我们可以使用mapState来进行使用**
+map就是来帮我们解决重复代码的
 
 在需要mapState的组件内 引入 import {mapState} from  'vuex'
 mapState({ key名:' state里的数据' })
@@ -344,3 +348,395 @@ const store = new Vuex.Store({
   // 前提是 namespaced = true 而且modules里存在这个对象
 ```
 
+**特殊简写方式**(非map方式 的 模块简写)
+
+```js
+        addlist(){
+            const personObj = {id:nanoid(),name:this.pname};
+		   //因为这里的persnObj 需要用到一些特殊的值 不能通过模板语法中 函数调用传值
+		   // 这种方式也方便了使用 
+            this.$store.commit('personAbout/AddPerson',personObj)
+        },
+```
+
+## 路由-117
+
+路由属于vue的插件库,专门实现spa(单页面)应用
+**安装**
+vue-router默认版本为4(只能在vue3中使用)
+所以在vue2中 我们要安装router4以下版本 
+
+```js
+//vue2下
+npm i vue-router@3
+```
+
+在src下 新建一个router文件夹/index.js
+path代表之后浏览器的路径指向
+componen代表对应路径指向显示的组件
+
+```js
+import VueRouter from 'vue-router'
+import About from '../components/MyAbout'
+import Home from '../components/MyHome'
+const router = new VueRouter({
+    routes:[
+        {
+            path:'/about',
+            component:About
+        },
+        {
+            path:'/home',
+            component:Home
+        },
+    ]
+}) 
+export default router
+```
+
+组件中
+
+**router-link**
+
+router-link是锚点标签  最终编译到html上时其实也是**a标签**   **点击之后** 就会切换当前的路由到 '/about' 
+**然后显示对应路由的组件**
+
+active-calss 当指定路由被激活时 它就会添加一个class名
+例如: active-class="active" 当这个router-link标签对应的路由被激活时,那么就会添加active样式反之删除
+
+### **router-link**  中 replace属性
+
+作用:控制路由跳转时操作浏览器**历史记录的模式**
+浏览器的历史记录 两种写入方式:**push,replace** 
+push是追加历史记录,replace是**替换当前记录**,路由跳转时默认为push
+如果在router-link标签 添加了 replace(布尔值为**true**开启) 属性 那么 这个路由在跳转时 会**替换掉当前路由** 
+
+### **router-view**
+
+显示组件的位置 就在router-view里  **router-view决定了路由显示的位置**
+
+```vue
+<router-link to="/about">about</router-link>
+<router-view></router-view>
+```
+
+**路由组件和一般组件的区分文件夹**
+
+pages用来存放路由会使用的组件
+components用来存放一般组件(不被路由直接显示的组件)
+
+当我们切换路由时,上一个路由的组件会被销毁(可以使用组件的销毁生命周期函数进行验证(beforeDestroy))
+
+$route 是当前路由的 上下文配置对象 比如当前是home 那么它就是 home路由的上下文配置对象(里面还有更多的api 所以为上下文配置对象)
+
+$router 整个路由对象 它包含了 所有配置对象-
+每个组件都有自己的$route属性,里面存储着自己的路由信息,整个应用只有一个router
+
+### 嵌套路由
+
+在一个需要子路由的配置对象中写入一个children数组
+
+```js
+    routes:[
+        {
+            path:'/about',
+            component:About
+        },
+        {
+            path:'/home',
+            component:Home,
+            children:[
+                {
+                    //这里不需要写/
+                    path:'show',
+                    component:()=> import('../components/MyChildren.vue')
+                },
+            ]
+        },
+    ]
+```
+
+然后在这个父路由组件里 写 router-link(锚点) 以及router-view
+
+router-view 的显示是由 router配置对象里面的结构决定的
+
+比如a组件下 锚点点击了a/xx路由  那么a的router-view就会显示xx组件
+如果a组件锚点点击了 a/yy/yychild 那么a组件则会显示yy组件 yy组件由于感应到了路由也会显示yychild路由  **需要注意的是 yy一定要有router-view 否则不会显示yychild**
+
+```vue
+<router-link to="/home/show">show</router-link>
+```
+
+```vue
+//home 组件要用router-view占位
+<router-view></router-view> 
+```
+
+**路由嵌套时 嵌套路由内的router-link标签需要写完整路径 从跟路径开始 /**
+
+## 路由的query参数
+
+query参数: 浏览器url拼接的参数 就是query参数
+
+例如:url?id=1&name:张三
+我们在对应路由的组件内 通过 this.$route.query可以拿到这些参数(对象形式)
+this.route还有其他对象
+
+```vue
+<router-link :to="`/home/show/showchildt?id=${oid}&title=${showanme}`">显示detail</router-link>
+```
+
+router-link to的对象写法 (参数比较多的时候 可以以这种标准方式)
+
+```vue
+    <router-link
+      :to="{
+        path: '/home/show/showchildt',
+        query: {
+          id: oid,
+          title: showanme,
+        },
+      }"
+    >
+      显示detail</router-link>
+```
+
+#### 命名路由
+
+当路由层级过多 比如三级路由 就需要这种方式
+**给配置对象一个name属性**
+这样的好处是 把原来的**path换成**了 **name属性内的值** 原本的path路径由于需要写成完整路径 后期可能会很长 
+
+```js
+//路由配置 js文件内
+children:[
+                        {
+                            name:'showchildt',
+                            path:'showchildt',
+                            component:()=> import('../components/MyTest.vue')
+                        }
+                    ]
+
+```
+
+```vue
+//组件内
+    <router-link
+      :to="{
+        name: 'showchildt',
+        query: {
+          id: oid,
+          title: showanme,
+        },
+      }"
+    >
+      显示detail</router-link>
+```
+
+## 路由的params参数
+
+在路由的index.js 路由配置对象path中拼接占位符 
+
+原本的query换成params
+
+我们在取得这些value的时候 也需要使用 this.$route.params
+
+#### !!!!!使用parms参数时,若使用to的对象写法,必须使用name 来代替path!!!!
+
+```js
+children:[
+                        {
+                            name:'showchildt',
+                            //路径后面用斜杠分割 保留一个key用来占位 key前面带有冒号
+                            path:'showchildt/:id/:title',
+                            component:()=> import('../components/MyTest.vue')
+                        }
+                    ]
+```
+
+```vue
+//组件内   
+<router-link
+      :to="{
+        name: 'showchildt',
+        params: {
+          id: oid,
+          title: showanme,
+        },
+      }"
+    >显示detail</router-link>
+```
+
+## 路由的props配置
+
+当我们使用 路由query 或者 params参数时 会使用 $route.query/$route.params 这样会很繁琐
+
+### 第一种方式(普通对象)
+
+#### 路由配置中
+
+```js
+                    children:[
+                        {
+                            name:'showchildt',
+                            path:'showchildt/:id/:title',
+                            component:()=> import('../components/MyTest.vue'),
+                            // 第一种写法,值为对象,该对象的所有key/value都会以props的形式传给showchildt组件
+                            props:{a:'你好威整天',b:'你好我是大黄蜂'}
+                        }
+                    ]
+```
+
+#### 组件内 常规使用props接收参数
+
+```vue
+<template>
+  <div>
+        <h2>路由prop{{a}}</h2> <h2>路由prop{{b}}</h2>
+  </div>
+</template>
+<script>
+export default {
+    props:['a','b'],
+}
+```
+
+### 第二种方式(params)
+
+在需要传值的路由配置对象中 写入props:true  之后对应的路由组件就可以以props的方式 接收对应key的params 数据(这种方式仅限params)
+
+```js
+                    children:[
+                        {
+                            name:'showchildt',
+                            path:'showchildt/:id/:title',
+                            component:()=> import('../components/MyTest.vue'),
+//第二种写法,值为布尔值,为true时,就会把该路由的组件的params参数以props的形式给当前组件
+                             props:true,
+                        }
+                    ]
+```
+
+```vue
+<template>
+  <div>
+        <h2>路由prop{{a}}</h2> <h2>路由prop{{b}}</h2>
+  </div>
+</template>
+<script>
+export default {
+    props:['id','title'],
+}
+```
+
+### 第三种方式(query)
+
+```js
+                    children:[
+                        {
+                            name:'showchildt',
+                            path:'showchildt/:id/:title',
+                            component:()=> import('../components/MyTest.vue'),
+//第三种写法 函数 这是一个回调函数 我们会接受到$route对象 可以把 query里的数据获取到然后返回给对应组件 
+                            props($route){
+                                return {id:$route.query.id,title:$route.query.title}
+                            }
+                        }
+                    ]
+```
+
+
+
+
+
+## 编程式路由导航
+
+this.**$router**.push({name:'showchildt' }) push里面的对象 就是router-link to属性中的对象
+this.$router.replace() 用法一致 但是具有replace特性 
+
+$router.forward() 前进
+$router.back() 后退
+$router.go(数值) 传递数值 根据正负 来进行前进或后退
+
+### 缓存组件
+
+给需要缓存的组件 包裹一个 keep-alive标签
+如果 keep-alive包裹的是 一个动态的路由组件(router-view)
+那么 keep-alive 可以给一个include="组件名" 属性 如果指定缓存的组件数量 >1 那么可以给include一个数组	
+
+## 特殊生命周期(路由)
+
+这是写在组件内的 不是路由守卫
+**路由激活对应组件**时 该路由的**activated(){}**函数触发
+**当前路由离开**时 调用该路由的**deactivated(){}**函数
+还有一个特殊的生命周期函数是 nextTick
+
+# **路由守卫**
+
+ 可以**简单的理解**为一座房子的门口的保安 判断成功那么就允许跳转路由
+
+## 全局路由守卫
+
+#### 初始化的时候被调用,每次路由切换之前被调用
+
+#### **前置路由守卫 befforeEach** VueRouter实例.befforeEach( ( to,from,next )=>{   } )
+
+// 给一个回调函数 回调函数中有三个参数 to , from , next
+to 表示跳转到的目的 路径
+from 触发路径 
+next 是一个函数 调用后 才可以成功跳转到目的路径 如果不调用是 不能跳转到目的路径的
+
+因为这是全局路由守卫 所以它会守卫所有路由的跳转
+我们可以给一个路由一个**验证来判断是否需要**进入守卫判断
+但是不能在路由配置对象里随便写数据 它只会保留预设配置项 所以我们给他**写到meta对象中**
+
+路由配置对象meta对象中可以写入我们自定义的一些数据
+
+####  **后置路由守卫 afterEach**
+
+#### 切换成功后会调用 
+
+to , from 两个参数 没有next 
+
+## 独享路由守卫(某一个路由独享)
+
+**单独**一个路由的守卫 独享路由守卫只有**一个 beforeEnter 守卫**
+
+**beforeEnter:function**   和beforeEach一样也是三个参数 to from next
+但是它需要写在一个单独**路由配置对象**当中
+以key是beforeEnter 值是function 函数内的参数和beforeEach 一致
+
+## 组件内路由守卫(只在组件内部调用)
+
+注意不是router 是route
+
+  进入某个路由之前调用它内部的 **beforeRouteEnter** 函数
+组件内的路由守卫只有**激活路由之前** 和 **失效路由时** 
+  **beforeRouteEnter**:function
+  参数:还是三个 to from next 
+
+ 离开当前路由时 **beforeRouterLeave()** 
+
+## 路由模式
+
+hash 和 history 
+**hash** 
+这里的路由hash值 指的是 浏览器url #后面的值 #后面的值是不会被服务器解析的
+比如 https://www.baidu.com/#/123 #后面的值就不会被解析 无论多长
+
+**history** 它是以历史记录为原理 
+两种路由模式的问题
+推荐使用hash 
+history 模式 打包上线后 运行时 会出现url出错
+服务器是返回的一个html给用户的浏览器 然后呈现我们的项目
+然后它 点击了项目当中的一些路由 显示了一些组件 这个时候 浏览器的url是会发生改变的
+然后当用户一刷新 浏览器的url就会去请求当前的地址 但是当前的url地址是加了很多路由路径的 会错把路由路径当作 资源路径去请求
+
+**总结:**
+**history 模式 项目打包上线以后 浏览器会错把路由路径当作请求路径去发请求 会报错**
+
+**hash模式 若以后将地址通过第三方手机app分享,若app校验严格,则会被标记不合法地址**(因为#)
+
+解决模式:
+使用hash 因为浏览器hash地址的特性 它并不会被解析成资源路径 
+配合后端,或者使用nodejs 的一些库
